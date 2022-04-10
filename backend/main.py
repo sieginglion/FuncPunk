@@ -1,13 +1,37 @@
-import flask
-from kubernetes import client, config
+import os
+import dotenv
+from kubernetes import client
+from flask import Flask, request, Response
 
-config.load_kube_config('/config')
-v1 = client.CoreV1Api()
+if not os.getenv('KUBE_BASE_URL'):
+    dotenv.load_dotenv()
 
-app = flask.Flask(__name__)
+KUBE_BASE_URL = os.getenv('KUBE_BASE_URL')
+KUBE_AUTH = os.getenv('KUBE_AUTH')
 
-@app.route('/func/<name>', methods=['GET', 'POST'])
+config = client.Configuration(host=KUBE_BASE_URL, api_key={'authorization': KUBE_AUTH})
+config.verify_ssl = False
+v1 = client.CoreV1Api(client.ApiClient(config))
+
+app = Flask(__name__)
+
+@app.route('/func/<name>', methods=['GET', 'PUT'])
 def func(name):
-    if flask.request.method == 'GET':
-        v1.read_namespaced_config_map(name)
+    if request.method == 'GET':
+        try:
+            cm = v1.read_namespaced_config_map(name, 'funcpunk')
+            return cm.data['code']
+        except:
+            return Response(status=404)
+    elif request.method == 'PUT':
+        cm = client.V1ConfigMap(
+            data={'code': request.data.decode()},
+            metadata=client.V1ObjectMeta(name=name)
+        )
+        try:
+            v1.replace_namespaced_config_map(name, 'funcpunk', cm)
+        except:
+            v1.create_namespaced_config_map('funcpunk', cm)
+        return Response(status=201)
 
+app.run(host='0.0.0.0')
