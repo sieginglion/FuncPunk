@@ -1,0 +1,27 @@
+mat-selection-list {
+  border-right: 1px solid lightgray;
+  height: 100%;
+  padding: 0px;
+}
+
+button.mat-fab {
+  bottom: 20px;
+  position: absolute;
+  right: 20px;
+}
+
+textarea {
+  font-family: "Roboto Mono", monospace;
+  height: calc(100% - 82px);
+  margin: 20px;
+  margin-top: 0px;
+  padding: 10px;
+  resize: none;
+  width: calc(100% - 62px);
+}
+
+button.mat-raised-button {
+  bottom: 40px;
+  position: absolute;
+  right: 40px;
+}
