@@ -1,16 +1,30 @@
-mat-selection-list {
+#list {
   border-right: 1px solid lightgray;
   height: 100%;
+  overflow-y: auto;
   padding: 0px;
 }
 
-button.mat-fab {
+#running {
+  color: green;
+}
+
+#add {
   bottom: 20px;
   position: absolute;
   right: 20px;
 }
 
-textarea {
+#name {
+  width: 200px;
+}
+
+#delete {
+  position: absolute;
+  right: 20px;
+}
+
+#code {
   font-family: "Roboto Mono", monospace;
   height: calc(100% - 82px);
   margin: 20px;
@@ -20,7 +34,7 @@ textarea {
   width: calc(100% - 62px);
 }
 
-button.mat-raised-button {
+#deploy {
   bottom: 40px;
   position: absolute;
   right: 40px;

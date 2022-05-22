@@ -1,32 +1,54 @@
-<div style="display: flex; height: 100%; overflow: hidden;">
-  <div style="position: relative; width: 20%;">
-    <mat-selection-list #funcList [multiple]="false" (selectionChange)="selectFunc($event)">
+<div style="display: flex; height: 100%; overflow: hidden">
+  <div style="position: relative; width: 20%">
+    <mat-selection-list
+      id="list"
+      [multiple]="false"
+      (selectionChange)="selectFunc($event)"
+    >
       <mat-list-option *ngFor="let func of funcs" [value]="func">
-        {{ func.name }}
+        <div style="display: flex; justify-content: space-between">
+          <span>{{ func.name }}</span>
+          <mat-icon id="running" *ngIf="func.running">check_circle</mat-icon>
+        </div>
       </mat-list-option>
     </mat-selection-list>
-    <button mat-fab color="primary" (click)="addFunc()">
+    <button mat-fab id="add" color="primary" (click)="addFunc()">
       <mat-icon>add</mat-icon>
     </button>
   </div>
-  <div *ngIf="selectedFunc" style="position: relative; width: 80%;">
-    <div style="align-items: center; display: flex; font-size: small; height: 40px; position: relative;">
-      <div style="margin-left: 20px;">
+  <div *ngIf="selectedFunc" style="position: relative; width: 80%">
+    <div
+      style="
+        align-items: center;
+        display: flex;
+        font-size: small;
+        height: 40px;
+        position: relative;
+      "
+    >
+      <div style="margin-left: 20px">
         <span>Name: </span>
-        <input [(ngModel)]="selectedFunc.name">
+        <input id="name" [(ngModel)]="selectedFunc.name" />
       </div>
-      <span style="margin-left: 20px;">Runtime: Python 3.9</span>
-      <span style="margin-left: 20px;">Framework: Flask</span>
-      <div style="margin-left: 20px;">
+      <span style="margin-left: 20px">Runtime: Python 3.9</span>
+      <span style="margin-left: 20px">Framework: Flask</span>
+      <div style="margin-left: 20px">
         <span>URL: </span>
-        <a href="{{ backendUrl }}/{{ selectedFunc.name }}" target="_blank">{{ backendUrl }}/{{ selectedFunc.name }}</a>
+        <a href="{{ backendUrl }}/{{ selectedFunc.name }}" target="_blank"
+          >{{ backendUrl }}/{{ selectedFunc.name }}</a
+        >
       </div>
-      <button mat-icon-button color="warn" style="position: absolute; right: 20px;">
+      <button id="delete" mat-icon-button color="warn" (click)="deleteFunc()">
         <mat-icon>delete</mat-icon>
       </button>
     </div>
-    <textarea [(ngModel)]="selectedFunc.code"></textarea>
-    <button mat-raised-button color="primary">
+    <textarea id="code" [(ngModel)]="selectedFunc.code"></textarea>
+    <button
+      id="deploy"
+      mat-raised-button
+      color="primary"
+      (click)="deployFunc()"
+    >
       <mat-icon>publish</mat-icon>
     </button>
   </div>
