@@ -1,1 +1,4 @@
-kubernetes
+fastapi[all]
+python-dotenv
+pyyaml
+requests

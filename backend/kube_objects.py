@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+import string
 from typing import Any, List
 
 import dotenv
@@ -33,20 +35,26 @@ class DotDict(dict):
 
 
 class BaseObject(object):
-    def __init__(self, new: bool = True) -> None:
+    def __init__(self) -> None:
         self.body = DotDict({'metadata': {'name': ''}})
-        self.new = new
         self.s = requests.Session()
         self.s.headers = {'Authorization': 'Bearer ' + KUBE_AUTH}
         self.s.verify = False
-        self.url_class = 's'
+        self.url_class = type(self).__name__.lower() + 's'
 
     def put(self) -> None:
-        self.s.request(
-            'POST' if self.new else 'PUT',
-            f'{ KUBE_BASE_URL }/api/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }/{ "" if self.new else self.body.metadata.name }',
+        api_type = 'apis/apps' if self.url_class == 'deployments' else 'api'
+        resp = self.s.request(
+            'POST',
+            f'{ KUBE_BASE_URL }/{ api_type }/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }/',
             json=self.body.to_dict(),
         )
+        if resp.status_code != 201:
+            resp = self.s.request(
+                'PUT',
+                f'{ KUBE_BASE_URL }/{ api_type }/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }/{ self.body.metadata.name }',
+                json=self.body.to_dict(),
+            )
 
     def _get(self, name: str) -> dict:
         resp = self.s.get(
@@ -61,8 +69,9 @@ class BaseObject(object):
         return resp.json()['items']
 
     def delete(self, name: str) -> None:
+        api_type = 'apis/apps' if self.url_class == 'deployments' else 'api'
         self.s.delete(
-            f'{ KUBE_BASE_URL }/api/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }/{ name }'
+            f'{ KUBE_BASE_URL }/{ api_type }/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }/{ name }'
         )
 
     def __del__(self) -> None:
@@ -70,40 +79,108 @@ class BaseObject(object):
         print('destructed')
 
 
-configmap_template = DotDict(
-    yaml.safe_load(
-        '''
+configmap_template = string.Template(
+    '''
 apiVersion: v1
-data: {}
+data: ${data}
 kind: ConfigMap
 metadata:
-  labels: {}
-  name: ""
+  name: ${name}
 '''
-    )
 )
 
 
 class ConfigMap(BaseObject):
-    def __init__(
-        self, name: str = '', labels: dict = {}, data: dict = {}, new: bool = True
-    ) -> None:
-        super().__init__(new)
-        self.body = configmap_template
-        self.body.metadata.name = name
-        self.body.metadata.labels = DotDict(labels)
-        self.body.data = DotDict(data)
-        self.url_class = type(self).__name__.lower() + 's'
+    def __init__(self, name: str = '', data: dict = {}) -> None:
+        super().__init__()
+        self.body = DotDict(
+            yaml.safe_load(
+                configmap_template.substitute({'name': name, 'data': json.dumps(data)})
+            )
+        )
 
     def get(self, name: str) -> ConfigMap:
         d = self._get(name)
-        return ConfigMap(
-            d['metadata']['name'], d['metadata']['labels'], d['data'], False
-        )
+        return ConfigMap(d['metadata']['name'], d['data'])
 
     def get_all(self) -> List[ConfigMap]:
         return [
-            ConfigMap(d['metadata']['name'], d['metadata']['labels'], d['data'], False)
+            ConfigMap(d['metadata']['name'], d['data'])
             for d in self._get_all()
-            if 'labels' in d['metadata'] and 'data' in d
+            if 'data' in d
         ]
+
+
+deployment_template = string.Template(
+    '''
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${name}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${name}
+  template:
+    metadata:
+      labels:
+        app: ${name}
+    spec:
+      containers:
+      - image: funcpunk/flask
+        name: ${name}
+        volumeMounts:
+        - mountPath: /flask/code.py
+          name: ${name}
+          subPath: code
+      volumes:
+      - configMap:
+          name: ${name}
+        name: ${name}
+'''
+)
+
+
+class Deployment(BaseObject):
+    def __init__(self, name: str = '') -> None:
+        super().__init__()
+        self.body = DotDict(
+            yaml.safe_load(deployment_template.substitute({'name': name}))
+        )
+
+    def get(self, name: str) -> Deployment:
+        d = self._get(name)
+        return Deployment(d['metadata']['name'])
+
+    def get_all(self) -> List[Deployment]:
+        return [Deployment(d['metadata']['name']) for d in self._get_all()]
+
+
+service_template = string.Template(
+    '''
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${name}
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+  selector:
+    app: ${name}
+'''
+)
+
+
+class Service(BaseObject):
+    def __init__(self, name: str = '') -> None:
+        super().__init__()
+        self.body = DotDict(yaml.safe_load(service_template.substitute({'name': name})))
+
+    def get(self, name: str) -> Service:
+        d = self._get(name)
+        return Service(d['metadata']['name'])
+
+    def get_all(self) -> List[Service]:
+        return [Service(d['metadata']['name']) for d in self._get_all()]
