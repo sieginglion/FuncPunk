@@ -48,7 +48,11 @@ export class AppComponent implements OnInit {
   }
 
   deployFunc(): void {
-    if (
+    if (!this.selectedFunc.name) {
+      this._snackBar.open(`Empty Name`, null, { duration: 5000 });
+    } else if (!this.selectedFunc.code) {
+      this._snackBar.open(`Empty Code`, null, { duration: 5000 });
+    } else if (
       this.funcs.some(
         (func) => func.running && func.name == this.selectedFunc.name
       )
@@ -60,7 +64,7 @@ export class AppComponent implements OnInit {
       this.http
         .put(
           `${this.backendUrl}/funcs/${this.selectedFunc.name}`,
-          this.selectedFunc.code
+          this.selectedFunc
         )
         .subscribe();
       for (let i = 0; i < this.funcs.length; i++) {
@@ -84,5 +88,6 @@ export class AppComponent implements OnInit {
         break;
       }
     }
+    this.selectedFunc = null;
   }
 }

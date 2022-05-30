@@ -28,7 +28,11 @@
     >
       <div style="margin-left: 20px">
         <span>Name: </span>
-        <input id="name" [(ngModel)]="selectedFunc.name" />
+        <input
+          id="name"
+          [(ngModel)]="selectedFunc.name"
+          disabled="{{ selectedFunc.running }}"
+        />
       </div>
       <span style="margin-left: 20px">Runtime: Python 3.9</span>
       <span style="margin-left: 20px">Framework: Flask</span>
