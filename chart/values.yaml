@@ -1,4 +1,0 @@
-configs:
-  KUBE_BASE_URL: https://10.1.0.117:16443
-  KUBE_AUTH: Bearer K2FQeStmNitZWnFySnpIcExrL2dXazBzUjBhZXlxWDY2cmRrQi9wdVNpZz0K
-  KUBE_NAMESPACE: funcpunk
