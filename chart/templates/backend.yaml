@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - args:
+        - -c
+        - python main.py
+        command:
+        - /bin/bash
+        envFrom:
+        - configMapRef:
+            name: configs
+        image: funcpunk/backend:latest
+        imagePullPolicy: Always
+        name: backend

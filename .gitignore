@@ -3,4 +3,4 @@ __pycache__
 *.jpg
 *.jpeg
 
-.env
+values.yaml

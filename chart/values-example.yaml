@@ -1,0 +1,4 @@
+configs:
+  KUBE_BASE_URL:
+  KUBE_AUTH:
+  KUBE_NAMESPACE:
