@@ -66,7 +66,7 @@ class BaseObject(object):
         resp = self.s.get(
             f'{ KUBE_BASE_URL }/api/v1/namespaces/{ KUBE_NAMESPACE }/{ self.url_class }'
         )
-        return resp.json()['items']
+        return resp.json().get('items', [])
 
     def delete(self, name: str) -> None:
         api_type = 'apis/apps' if self.url_class == 'deployments' else 'api'

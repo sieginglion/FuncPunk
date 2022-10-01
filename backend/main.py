@@ -9,6 +9,7 @@ from kube_objects import ConfigMap, Deployment, Service
 
 
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'])
 
 
 class Func(BaseModel):
@@ -41,8 +42,6 @@ async def delete_func(name: str) -> Response:
     ConfigMap().delete(name)
     return Response(status_code=200)
 
-
-app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'])
 
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8000)

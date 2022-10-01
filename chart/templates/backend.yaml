@@ -20,7 +20,7 @@ spec:
         - /bin/bash
         envFrom:
         - configMapRef:
-            name: configs
+            name: config
         image: funcpunk/backend:latest
         imagePullPolicy: Always
         name: backend
